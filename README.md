@@ -1,40 +1,78 @@
-# remote0 WSL Launcher
+# UESTC AutoLogin
 
-This folder snapshots the scripts used to start the `remote0` account's WSL environment from the current Windows account.
+UESTC AutoLogin keeps the UESTC campus network authenticated on Windows. It runs a lightweight watcher, detects when SRun reports the machine as offline, repairs common local network/proxy state, and performs direct SRun authentication again.
 
-## Current Script Locations
+## Features
 
-The live scripts are currently stored in:
+- Polls `http://10.253.0.237/cgi-bin/rad_user_info` every 3 seconds by default.
+- Runs direct SRun authentication when the campus network session drops.
+- Handles common Clash/Verge/Tailscale and proxy routing problems before retrying login.
+- Stores the campus password in Windows Credential Manager.
+- Provides Start Menu shortcuts for start, credential update, and uninstall.
+- Installs as a per-user app under `%LOCALAPPDATA%\UESTC_AutoLogin`.
 
-- `C:\Users\Uiye2\start_remote0_wsl_delayed.cmd`
-- `C:\Users\Uiye2\start_remote0_wsl_delayed.vbs`
-- `C:\Users\Uiye2\remote0_dump_home.cmd`
+## Install
 
-This repository is a saved copy at:
+Download `UESTC_AutoLogin_Setup_0.1.0.exe` from the GitHub release and run it.
 
-- `C:\Users\Uiye2\remote0-wsl-launcher`
+The installer will:
 
-## Files
+1. Check that Node.js is installed at `C:\Program Files\nodejs\node.exe`.
+2. Ask for the campus network student ID and password.
+3. Save the password to Windows Credential Manager.
+4. Install files to `%LOCALAPPDATA%\UESTC_AutoLogin`.
+5. Create a login startup shortcut and Start Menu shortcuts.
+6. Start the watcher immediately.
 
-- `start_remote0_wsl_delayed.cmd`
-  - Waits 180 seconds, then calls the desktop script that starts `remote0` WSL.
-- `start_remote0_wsl_delayed.vbs`
-  - Waits 180 seconds, then runs the desktop launch script hidden.
-- `remote0_dump_home.cmd`
-  - Runs `wsl.exe -d Ubuntu` and writes the Linux `$HOME` path to `C:\Users\Public\remote0_home_linux.txt`.
+If Node.js is missing, install Node.js LTS first and run the installer again.
 
-## Runtime Notes
+## Change Credentials
 
-- The launch path is designed around the Windows user `remote0`.
-- WSL distributions are registered per Windows user, so `remote0`'s WSL is not visible from the current Windows user's `wsl -l -v`.
-- The delayed launch has been stable for five days as of 2026-05-06.
+Open:
 
-## Important Dependency
-
-The delayed scripts call a desktop command file:
-
-```cmd
-D:\Desktop\启动 remote0 WSL.cmd
+```text
+Start Menu > UESTC AutoLogin > Configure Credentials
 ```
 
-If the desktop script is moved or renamed, update both delayed launcher files.
+This overwrites the existing Windows Credential Manager entry.
+
+## Logs
+
+Logs are written to:
+
+```text
+%LOCALAPPDATA%\Campuswire
+```
+
+Useful files:
+
+- `watcher-node-<PID>.log`
+- `direct-auth.log`
+
+A healthy recovery usually includes:
+
+```text
+status response error=not_online_error ... ok=false
+invoke recovery
+direct auth first exit=0
+status response error=ok ... ok=true
+```
+
+## Build
+
+From the repository root:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\build-installer.ps1
+```
+
+Output:
+
+```text
+dist\UESTC_AutoLogin_Setup_0.1.0.exe
+dist\UESTC_AutoLogin_0.1.0.zip
+```
+
+## Release
+
+Version `0.1.0` is the first stable package based on the configuration that has stayed connected for five days.

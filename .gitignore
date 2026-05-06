@@ -1,0 +1,6 @@
+campuswire-local.json
+*.log
+watcher-*.log
+watcher-node-*.log
+node_modules/
+dist/
